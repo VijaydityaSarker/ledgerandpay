@@ -1,4 +1,4 @@
-// programs/gpandep/src/expense.rs
+// programs/ledgerandpay/src/expense.rs
 
 use anchor_lang::prelude::*;
 use crate::group::GroupAccount;

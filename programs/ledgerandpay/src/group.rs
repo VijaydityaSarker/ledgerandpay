@@ -1,4 +1,4 @@
-// programs/gpandep/src/group.rs
+// programs/ledgerandpay/src/group.rs
 
 use anchor_lang::prelude::*;
 use crate::GroupError;
