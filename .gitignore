@@ -1,7 +1,43 @@
-.anchor
+# Anchor state
+.anchor/
+anchor.lock
+
+# Rust build artifacts
+/target/
+/**/target/
+/**/*.rs.bk
+
+# Anchor-generated IDLs
+/target/idl/
+/idl.json
+
+# Anchor program builds
+programs/**/target/
+/programs/**/**/*.so
+
+# Node.js
+node_modules/
+/**/node_modules/
+/.yarn/
+/yarn.lock
+
+# TypeScript build
+/dist/
+/**/dist/
+/*.tsbuildinfo
+
+# Environment
+.env
+**/.env
+
+# Local test validator logs
+test-ledger/
+
+# IDE or OS files
+.idea/
+/.vscode/
 .DS_Store
-target
-**/*.rs.bk
-node_modules
-test-ledger
-.yarn
+Thumbs.db
+
+# Misc
+*.log

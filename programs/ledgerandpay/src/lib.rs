@@ -1,4 +1,4 @@
-// programs/gpandep/src/lib.rs
+// programs/ledgerandpay/src/lib.rs
 
 use anchor_lang::prelude::*;
 
