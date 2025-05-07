@@ -18,7 +18,7 @@ pub use crate::settlement::*;
 declare_id!("4UUkEZrwe8PoseD6Ph7WuUHJJ1ob5P4WevNcpFZt2LTC");
 
 #[program]
-pub mod gpandep {
+pub mod ledgerandpay {
     use super::*;
 
     pub fn create_group(
