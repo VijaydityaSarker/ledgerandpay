@@ -68,3 +68,7 @@ idl/*.json
 # Anchor debug log
 anchor-debug.log
 
+
+test-ledger/
+target/
+node_modules/
