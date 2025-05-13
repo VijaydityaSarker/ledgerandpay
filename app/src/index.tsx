@@ -1,19 +1,46 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+// src/index.tsx
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { clusterApiUrl } from "@solana/web3.js";
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from "@solana/wallet-adapter-react";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+} from "@solana/wallet-adapter-wallets";
+import { TipLinkWalletAdapter } from "@tiplink/wallet-adapter";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import App from "./App";
+import "./index.css";
+import { Buffer } from "buffer";
+(window as any).Buffer = Buffer;
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const network = WalletAdapterNetwork.Devnet;
+const endpoint = clusterApiUrl(network);
+
+const wallets = [
+  new PhantomWalletAdapter(),
+  new SolflareWalletAdapter({ network }),
+  new TipLinkWalletAdapter({
+    title: "Ledger & Pay",
+    clientId: "<YOUR-TIPLINK-CLIENT-ID>",
+    theme: "dark",
+    walletAdapterNetwork: network,
+  }),
+];
+
+const container = document.getElementById("root")!;
+const root = createRoot(container);
+
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  <ConnectionProvider endpoint={endpoint}>
+    <WalletProvider wallets={wallets} autoConnect>
+      <WalletModalProvider>
+        <App />
+      </WalletModalProvider>
+    </WalletProvider>
+  </ConnectionProvider>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

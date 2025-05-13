@@ -1,5 +1,4 @@
 // programs/ledgerandpay/src/lib.rs
-
 use anchor_lang::prelude::*;
 
 // 1) Declare your modules:
@@ -7,14 +6,12 @@ pub mod group;
 pub mod expense;
 pub mod settlement;
 
-// 2) Re-export everything from those modules so that
-//    Anchor’s #[program] macro can see the
-//    generated __client_accounts_<ix> types:
+// 2) Re-export
 pub use crate::group::*;
 pub use crate::expense::*;
 pub use crate::settlement::*;
 
-// 3) Your single on‐chain program ID
+// 3) Program ID
 declare_id!("4UUkEZrwe8PoseD6Ph7WuUHJJ1ob5P4WevNcpFZt2LTC");
 
 #[program]
@@ -23,16 +20,23 @@ pub mod ledgerandpay {
 
     pub fn create_group(
         ctx: Context<CreateGroup>,
+        unique_seed: [u8;16],
         name: String,
         description: String,
     ) -> Result<()> {
-        create_group_handler(ctx, name, description)
+        create_group_handler(ctx, unique_seed, name, description)
     }
 
-    pub fn join_group(
-        ctx: Context<JoinGroup>,
-    ) -> Result<()> {
+    pub fn join_group(ctx: Context<JoinGroup>) -> Result<()> {
         join_group_handler(ctx)
+    }
+
+    pub fn rename_group(ctx: Context<RenameGroup>, new_name: String) -> Result<()> {
+        rename_group_handler(ctx, new_name)
+    }
+
+    pub fn remove_member(ctx: Context<RemoveMember>, member: Pubkey) -> Result<()> {
+        remove_member_handler(ctx, member)
     }
 
     pub fn log_expense(
@@ -44,11 +48,9 @@ pub mod ledgerandpay {
         log_expense_handler(ctx, amount, participants, description)
     }
 
-    pub fn settle_expense(
-        ctx: Context<SettleExpense>,
-        ) -> Result<()> {
+    pub fn settle_expense(ctx: Context<SettleExpense>) -> Result<()> {
         settle_expense_handler(ctx)
-     }
+    }
 }
 
 #[error_code]
@@ -61,8 +63,8 @@ pub enum GroupError {
     NameTooLong,
     #[msg("Description is too long")]
     DescriptionTooLong,
-    #[msg("Payer is not in the group")]
-    NotGroupMember,
     #[msg("One or more participants are not in the group")]
     InvalidParticipant,
-}
+    #[msg("Payer is not in the group")]
+    NotGroupMember,
+} 

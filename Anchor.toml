@@ -5,18 +5,22 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-ledgerandpay = "4UUkEZrwe8PoseD6Ph7WuUHJJ1ob5P4WevNcpFZt2LTC"
-
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "http://127.0.0.1:8899"
+wallet = "~/.config/solana/test-wallet.json"
+
+[programs.localnet]
+ledgerandpay = "4UUkEZrwe8PoseD6Ph7WuUHJJ1ob5P4WevNcpFZt2LTC"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [test]
 startup_wait = 20000
+
+[test.validator]
+url = "http://localhost:8899"
+startup_wait = 10000
