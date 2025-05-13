@@ -48,9 +48,11 @@ test-ledger/              # local validator ledger
 anchor.lock               # Anchor’s lockfile
 .anchor/                  # if you see it in your workspace
 
-# Rust/Cargo
-**/target/                # all target folders
-**/*.rs.bk
+# Rust/Cargo build artifacts
+/target/
+**/target/
+programs/**/target/
+**/*.so
 
 # Anchor BPF & IDL
 programs/**/target/       # program build artifacts
