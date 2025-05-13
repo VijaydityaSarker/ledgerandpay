@@ -25,7 +25,9 @@ async function fundFromWallet(to: PublicKey, provider: AnchorProvider, minLampor
 
 describe("Expense Logging", () => {
     // Set up provider and program
-    const connection = new Connection(process.env.ANCHOR_PROVIDER_URL || "http://127.0.0.1:8900", "confirmed");
+    // Use devnet by default unless overridden by ANCHOR_PROVIDER_URL
+    const rpcUrl = process.env.ANCHOR_PROVIDER_URL ?? "https://api.devnet.solana.com";
+    const connection = new Connection(rpcUrl, "confirmed");
     const wallet = new anchor.Wallet(
         anchor.web3.Keypair.fromSecretKey(
             Uint8Array.from(JSON.parse(fs.readFileSync(process.env.ANCHOR_WALLET!, "utf-8")))

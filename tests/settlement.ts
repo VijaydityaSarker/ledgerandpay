@@ -24,7 +24,8 @@ const payer = Keypair.fromSecretKey(
 );
 
 // Configure the provider to talk to your local validator
-const rpcUrl = process.env.ANCHOR_PROVIDER_URL ?? "http://127.0.0.1:8899";
+// Use devnet by default unless overridden by ANCHOR_PROVIDER_URL
+const rpcUrl = process.env.ANCHOR_PROVIDER_URL ?? "https://api.devnet.solana.com";
 const connection = new anchor.web3.Connection(rpcUrl, "confirmed");
 const provider = new anchor.AnchorProvider(
   connection,
@@ -36,14 +37,17 @@ anchor.setProvider(provider);
 const program = anchor.workspace.Ledgerandpay as Program<Ledgerandpay>;
 
 /**
- * Airdrops the given amount of SOL to the pubkey.
+ * Helper to fund a new account with SOL from payer (devnet-compatible)
  */
-async function airdropSol(pubkey: PublicKey, amountSol: number) {
-  const sig = await provider.connection.requestAirdrop(
-    pubkey,
-    amountSol * anchor.web3.LAMPORTS_PER_SOL
+async function fundSol(to: PublicKey, amountSol: number) {
+  const tx = new anchor.web3.Transaction().add(
+    anchor.web3.SystemProgram.transfer({
+      fromPubkey: payer.publicKey,
+      toPubkey: to,
+      lamports: amountSol * anchor.web3.LAMPORTS_PER_SOL,
+    })
   );
-  await provider.connection.confirmTransaction(sig, "confirmed");
+  await provider.sendAndConfirm(tx, [payer]);
 }
 
 /**
@@ -51,9 +55,8 @@ async function airdropSol(pubkey: PublicKey, amountSol: number) {
  * Returns all the key data needed for settlement tests.
  */
 async function setupTestEnv(desc: string, friend: Keypair) {
-  // 1) Airdrop to payer and friend so they can pay fees
-  await airdropSol(payer.publicKey, 0.1);
-  await airdropSol(friend.publicKey, 0.1);
+  // 1) Fund friend so they can pay fees (payer already funded)
+  await fundSol(friend.publicKey, 0.1);
 
   // 2) Create a USDC-like mint (6 decimals)
   const usdcMint = await createMint(
@@ -242,7 +245,7 @@ describe("SettleExpense", () => {
 
     // Set up an outsider with some USDC
     const outsider = Keypair.generate();
-    await airdropSol(outsider.publicKey, 0.1);
+    await fundSol(outsider.publicKey, 0.1);
     const outsiderAta = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       payer,

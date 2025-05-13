@@ -9,18 +9,17 @@ skip-lint = false
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "http://127.0.0.1:8899"
-wallet = "~/.config/solana/test-wallet.json"
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
 
-[programs.localnet]
-ledgerandpay = "4UUkEZrwe8PoseD6Ph7WuUHJJ1ob5P4WevNcpFZt2LTC"
-
-[scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [test]
 startup_wait = 20000
 
-[test.validator]
-url = "http://localhost:8899"
-startup_wait = 10000
+[programs.devnet]
+ledgerandpay = "4UUkEZrwe8PoseD6Ph7WuUHJJ1ob5P4WevNcpFZt2LTC"
+
+# [test.validator]
+# url = "http://localhost:8899"
+# startup_wait = 10000

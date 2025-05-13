@@ -14,13 +14,16 @@ import fs from "fs";
 
 describe("Group CRUD operations", () => {
     // 1) Anchor spins up a local test validator
-    const connection = new Connection(process.env.ANCHOR_PROVIDER_URL || "http://127.0.0.1:8900", "confirmed");
-const wallet = new anchor.Wallet(
-  anchor.web3.Keypair.fromSecretKey(
-    Uint8Array.from(JSON.parse(fs.readFileSync(process.env.ANCHOR_WALLET!, "utf-8")))
-  )
-);
-const provider = new anchor.AnchorProvider(connection, wallet, {});
+    // Use devnet by default unless overridden by ANCHOR_PROVIDER_URL
+    const rpcUrl = process.env.ANCHOR_PROVIDER_URL ?? "https://api.devnet.solana.com";
+    const connection = new Connection(rpcUrl, "confirmed");
+    const wallet = new anchor.Wallet(
+      anchor.web3.Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(process.env.ANCHOR_WALLET!, "utf-8")))
+      )
+    );
+    const provider = new anchor.AnchorProvider(connection, wallet, {});
+    anchor.setProvider(provider);
 anchor.setProvider(provider);
 
     // 2) Our deployed program
@@ -58,8 +61,7 @@ anchor.setProvider(provider);
 
     it("lets another user join the group", async () => {
         const joiner = Keypair.generate();
-        const sig = await provider.connection.requestAirdrop(joiner.publicKey, 2 * LAMPORTS_PER_SOL);
-        await provider.connection.confirmTransaction(sig);
+        // Skipping airdrop for joiner on devnet; wallet has enough SOL.
 
         const joinProv = new anchor.AnchorProvider(
             provider.connection,
@@ -95,8 +97,7 @@ anchor.setProvider(provider);
 
     it("prevents non-creator from renaming the group", async () => {
         const nonCreator = Keypair.generate();
-        const sig = await provider.connection.requestAirdrop(nonCreator.publicKey, 2 * LAMPORTS_PER_SOL);
-        await provider.connection.confirmTransaction(sig);
+        // Skipping airdrop for nonCreator on devnet; wallet has enough SOL.
 
         const nonProv = new anchor.AnchorProvider(
             provider.connection,
@@ -144,8 +145,7 @@ anchor.setProvider(provider);
 
     it("prevents non-creator from removing a member", async () => {
         const nonCreator = Keypair.generate();
-        const sig = await provider.connection.requestAirdrop(nonCreator.publicKey, 2 * LAMPORTS_PER_SOL);
-        await provider.connection.confirmTransaction(sig);
+        // Skipping airdrop for nonCreator on devnet; wallet has enough SOL.
 
         const nonProv = new anchor.AnchorProvider(
             provider.connection,
