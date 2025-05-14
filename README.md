@@ -32,9 +32,7 @@ A Solana + Anchor on-chain program (and React front-end) for managing shared exp
 ├── tsconfig.json
 └── README.md                     # ← You are here
 
-
-
----
+```
 
 ## 🔑 Prerequisites
 
