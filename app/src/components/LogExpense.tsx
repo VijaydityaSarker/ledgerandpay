@@ -13,7 +13,7 @@ import {
     useWallet,
 } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import idlJson from "../idl.json";
+import idlJson from "../ledgerandpay.json";
 
 // our IDL type now needs an `address` field at top level
 type LedgerandpayIDL = Idl & { address: string };

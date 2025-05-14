@@ -2,23 +2,22 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useConnection, useAnchorWallet, useWallet, useAnchorWallet as useAnchorWalletHook } from "@solana/wallet-adapter-react";
-import { AnchorProvider, Program, Idl } from "@coral-xyz/anchor";
-import idlJson from "../idl.json";
+import { AnchorProvider, Program, Idl, BN } from "@coral-xyz/anchor";
+import type { Ledgerandpay } from "../ledgerandpay";
+import idlJson from "../ledgerandpay.json";
 
-interface GroupData {
-    creator: PublicKey;
-    uniqueSeed: Uint8Array;
-    bump: number;
-    groupName: string;
-    description: string;
-    participants: PublicKey[];
-    createdAt: bigint;
+type GroupAccount = {
+    pubkey: PublicKey,
+    account: {
+        creator: PublicKey,
+        unique_seed: number[],    // stable, random or timestamp‐based seed
+        bump: number,                 // PDA bump
+        group_name: string,       // human‐readable name
+        description: string,      // description (max 200)
+        participants: PublicKey[],// member list
+        created_at: number,          // timestamp
+    }
 }
-
-type GroupRecord = {
-    pubkey: PublicKey;
-    data: GroupData;
-};
 
 interface ViewMyGroupsProps {
     onNewGroupTx?: string | null;
@@ -29,7 +28,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
     const { publicKey, connected } = useWallet();
     const wallet = useAnchorWalletHook();
     const { connection } = useConnection();
-    const [groups, setGroups] = useState<GroupRecord[]>([]);
+    const [groups, setGroups] = useState<GroupAccount[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
@@ -52,50 +51,53 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
             const provider = new AnchorProvider(connection, wallet, {
                 preflightCommitment: "processed",
             });
-            const program = new Program(idlJson as Idl, provider) as any;
+            const program = new Program<Ledgerandpay>(idlJson as Idl, provider);
             console.log('Program ID:', program.programId.toBase58());
 
-            // Fetch all program accounts
-            console.log('Fetching program accounts...');
-            const raw = await connection.getProgramAccounts(program.programId);
-            console.log(`Found ${raw.length} program accounts`);
-            
-            const coder = program.coder.accounts as any;
-            const mine: GroupRecord[] = [];
+            // Fetch all groups
+            console.log('Fetching groups...');
+            const rawAccounts = await connection.getProgramAccounts(program.programId);
+            console.log('Found ' + rawAccounts.length + ' accounts');
 
-            for (const { pubkey, account } of raw) {
-                console.log('Processing account:', pubkey.toBase58());
+            const validGroups = [];
+            for (const [index, acc] of Object.entries(rawAccounts)) {
+                console.log('Decoding account ' + index + ' of ' + rawAccounts.length);
+                const VALID_SIZE = 477;
+                if (VALID_SIZE !== acc.account.data.length) continue;
                 try {
-                    const decoded = coder.decode("GroupAccount", account.data);
-                    
-                    // Ensure all required fields are present
-                    if (decoded && decoded.participants) {
-                        const isParticipant = decoded.participants.some((p: PublicKey) => 
-                            p.equals(wallet.publicKey!)
-                        );
-
-                        if (isParticipant) {
-                            mine.push({
-                                pubkey,
-                                data: {
-                                    creator: decoded.creator,
-                                    uniqueSeed: decoded.uniqueSeed || new Uint8Array(16),
-                                    bump: decoded.bump || 0,
-                                    groupName: decoded.groupName || "Unnamed Group",
-                                    description: decoded.description || "",
-                                    participants: decoded.participants || [],
-                                    createdAt: decoded.createdAt || BigInt(0),
-                                },
-                            });
-                        }
-                    }
-                } catch (err) {
-                    console.error(`Error decoding group account ${pubkey.toBase58()}:`, err);
-                    continue;
+                    const decoded = program.account.groupAccount.coder.accounts.decode(
+                        "groupAccount",
+                        acc.account.data
+                    );
+                    validGroups.push({
+                        pubkey: acc.pubkey,
+                        account: decoded,
+                    } as unknown as GroupAccount);
+                } catch (e) {
+                    // Skip accounts that fail to decode
+                    console.warn(`Skipping account ${acc.pubkey.toBase58()}:`, e);
                 }
             }
-
-            setGroups(mine);
+            
+            const mine = [];
+            for (const group of validGroups) {
+                if (group.account.participants.some(p => p.equals(wallet.publicKey))) {
+                    mine.push(group);
+                }
+            }
+            
+            setGroups(mine.map(account => ({
+                pubkey: account.pubkey,
+                account: {
+                    creator: account.account.creator,
+                    unique_seed: account.account.unique_seed,
+                    bump: account.account.bump,
+                    group_name: account.account.group_name,
+                    description: account.account.description,
+                    participants: account.account.participants,
+                    created_at: account.account.created_at,
+                }
+            })));
         } catch (err) {
             console.error("Error fetching groups:", err);
             setError("Failed to load groups. Please try again.");
@@ -211,42 +213,35 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <h3 className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                                        {group.data.groupName}
+                                        {group.account.group_name}
                                     </h3>
-                                    {group.data.description && (
+                                    {group.account.description && (
                                         <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                                            {group.data.description}
+                                            {group.account.description}
                                         </p>
                                     )}
-                                </div>
-                                <div className="ml-4 flex-shrink-0">
-                                    <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                        <span className="text-sm font-medium">
-                                            {group.data.groupName.charAt(0).toUpperCase()}
-                                        </span>
-                                    </div>
                                 </div>
                             </div>
                             
                             <div className="mt-4 flex items-center justify-between">
                                 <div className="flex -space-x-2">
-                                    {group.data.participants.slice(0, 3).map((participant, idx) => (
+                                    {group.account.participants.slice(0, 3).map((participant, idx) => (
                                         <div key={idx} className="h-6 w-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
                                             <span className="text-xs text-gray-500">
                                                 {participant.toString().charAt(0).toUpperCase()}
                                             </span>
                                         </div>
                                     ))}
-                                    {group.data.participants.length > 3 && (
+                                    {group.account.participants.length > 3 && (
                                         <div className="h-6 w-6 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center">
                                             <span className="text-xs text-gray-500">
-                                                +{group.data.participants.length - 3}
+                                                +{group.account.participants.length - 3}
                                             </span>
                                         </div>
                                     )}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                    {new Date(Number(group.data.createdAt) * 1000).toLocaleDateString('en-US', {
+                                    {new Date(Number(group.account.created_at) * 1000).toLocaleDateString('en-US', {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric'
@@ -259,7 +254,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
                                     <span className="text-xs font-medium text-gray-500">
-                                        {group.data.participants.length} {group.data.participants.length === 1 ? 'member' : 'members'}
+                                        {group.account.participants.length} {group.account.participants.length === 1 ? 'member' : 'members'}
                                     </span>
                                 </div>
                                 <div className="text-xs font-mono text-indigo-600 truncate max-w-[100px]" title={group.pubkey.toBase58()}>

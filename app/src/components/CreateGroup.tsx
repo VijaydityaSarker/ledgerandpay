@@ -12,7 +12,7 @@ import {
     web3,
     Idl,
 } from "@coral-xyz/anchor";
-import idlJson from "../idl.json";
+import idlJson from "../ledgerandpay.json";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { toast } from "sonner";
 

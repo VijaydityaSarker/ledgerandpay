@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { Program, AnchorProvider, web3 } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import idl from "../idl.json";
+import idl from "../ledgerandpay.json";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 export const RemoveMember: React.FC = () => {

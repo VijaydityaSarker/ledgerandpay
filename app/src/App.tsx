@@ -58,24 +58,35 @@ export default function App() {
         <WalletConnectionProvider>
             <div className="min-h-screen bg-gray-50">
                 {/* Header */}
-                <header className="bg-white shadow-sm sticky top-0 z-10">
+                <header className="header-blur bg-white/80 shadow-sm sticky top-0 z-10 transition-base">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                        <h1 className="text-2xl font-bold text-indigo-600">Ledger & Pay</h1>
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-700 tracking-tight drop-shadow-lg transition-base">Ledger & Pay</h1>
                         <div className="wallet-adapter-button-trigger">
-                            <WalletMultiButton />
+                            <WalletMultiButton className="transition-base hover:scale-105 focus-visible:ring-2 focus-visible:ring-indigo-500" />
                         </div>
                     </div>
                 </header>
 
                 {/* Hero Section */}
-                <section className="bg-indigo-600 text-white py-16">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+                <section className="hero-gradient relative text-white py-20 sm:py-28 overflow-hidden">
+                    {/* Animated background shapes */}
+                    <div className="hero-animated-bg">
+                        <span className="circle1"></span>
+                        <span className="circle2"></span>
+                        <span className="circle3"></span>
+                    </div>
+                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight drop-shadow-lg">
                             Split bills the easy way
                         </h1>
-                        <p className="mt-6 text-xl max-w-3xl mx-auto">
+                        <p className="mt-6 text-xl max-w-3xl mx-auto text-indigo-100">
                             Create a group. Log expenses. Settle in USDC.
                         </p>
+                        <div className="mt-10 flex justify-center">
+                            <a href="#main-app" className="btn-cta bg-white text-indigo-700 font-semibold px-8 py-4 rounded-lg shadow-lg text-lg hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-base">
+                                Get Started
+                            </a>
+                        </div>
                     </div>
                 </section>
 

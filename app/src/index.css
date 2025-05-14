@@ -1,13 +1,44 @@
-body {
+/***********************
+ * Modern CSS Reset & Base Styles
+ ***********************/
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+*, *::before, *::after {
+  box-sizing: inherit;
   margin: 0;
+  padding: 0;
+}
+body {
+  min-height: 100vh;
+  background: #f5f6fa;
+  color: #22223b;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  font-size: 1rem;
 }
-
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  background: #f3f4f6;
+  color: #4f46e5;
+  border-radius: 4px;
+  padding: 0.1em 0.3em;
+}
+:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+a {
+  color: #6366f1;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+a:hover, a:focus {
+  color: #4338ca;
+  text-decoration: underline;
 }
