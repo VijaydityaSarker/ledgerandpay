@@ -50,3 +50,30 @@ A Solana + Anchor on-chain program (and React front-end) for managing shared exp
 
 ```bash
 solana-test-validator --reset
+
+## 🛠️ Running Tests
+
+All tests run against **Devnet** (`https://api.devnet.solana.com`).
+
+1. **Fund your Devnet wallet** (if you haven’t already):
+
+    ```bash
+    solana airdrop 1 --url https://api.devnet.solana.com
+    ```
+
+2. **Run the tests**:
+
+    ```bash
+    ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
+    ANCHOR_WALLET=~/.config/solana/devnet-wallet.json \
+    yarn test
+    ```
+
+Your `ANCHOR_PROVIDER_URL` and `ANCHOR_WALLET` environment variables tell Anchor to point at Devnet and use your test‐wallet keypair. The `yarn test` script will then run:
+
+- `tests/group.ts`  
+- `tests/expense.ts`  
+- `tests/settlement.ts`  
+
+against the program you’ve deployed on Devnet.  
+
