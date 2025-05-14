@@ -8,27 +8,29 @@ A Solana + Anchor on-chain program (and React front-end) for managing shared exp
 
 ## 📦 Repository Structure
 
-├── Anchor.toml # Anchor config (cluster, programs, scripts)
-├── programs/ledgerandpay/ # Anchor/Rust on-chain program
-│ ├── Cargo.toml
-│ └── src/
-│ ├── lib.rs
-│ ├── group.rs # group CRUD logic
-│ ├── expense.rs # expense-logging logic
-│ └── settlement.rs # CPI for settling expenses in USDC
-├── app/ # React front-end (Create React App + TypeScript)
-│ ├── package.json
-│ └── src/
-│ └── components/ # UI components (CreateGroup, etc.)
-├── tests/ # Mocha/Anchor test suites
-│ ├── group.ts
-│ ├── expense.ts
-│ └── settlement.ts
+```text
+.
+├── Anchor.toml                   # Anchor config (cluster, programs, scripts)
+├── programs/ledgerandpay/        # On-chain program (Rust + Anchor)
+│   ├── Cargo.toml
+│   └── src/
+│       ├── lib.rs                # Program entrypoint
+│       ├── group.rs              # Group CRUD logic
+│       ├── expense.rs            # Expense-logging logic
+│       └── settlement.rs         # USDC settlement CPI
+├── app/                          # React front-end (CRA + TypeScript)
+│   ├── package.json
+│   └── src/
+│       └── components/           # UI components (CreateGroup, etc.)
+├── tests/                        # Anchor/Mocha test suites
+│   ├── group.ts
+│   ├── expense.ts
+│   └── settlement.ts
 ├── .gitignore
-├── package.json
-├── yarn.lock
+├── package.json                  # Root workspace (scripts, deps)
+├── yarn.lock                     # Yarn lockfile
 ├── tsconfig.json
-└── README.md # ← You are here
+└── README.md                     # ← You are here
 
 
 
