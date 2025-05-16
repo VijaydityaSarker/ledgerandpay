@@ -4,7 +4,7 @@ import logo from '../logo.svg';
 
 export default function Header() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'groups', label: 'My Groups' },
@@ -25,36 +25,36 @@ export default function Header() {
               Ledger & Pay
             </span>
           </div>
-          
+
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === item.id 
-                  ? 'bg-indigo-700/70 text-white' 
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === item.id
+                  ? 'bg-indigo-700/70 text-white'
                   : 'text-indigo-200 hover:bg-indigo-800/50 hover:text-white'}`}
               >
                 {item.label}
               </button>
             ))}
           </nav>
-          
+
           {/* Wallet button */}
           <div className="flex items-center">
-            <WalletMultiButton className="!bg-gradient-to-r !from-green-500 !to-emerald-600 !text-white !font-bold !rounded-lg !px-4 !py-2 !text-sm !shadow-lg hover:!shadow-emerald-700/20 hover:!scale-105 !transition-all !duration-200 !border !border-emerald-500/20" />
+            <WalletMultiButton className="!bg-red-600 hover:!bg-red-700 !text-white !font-medium !rounded-lg !px-4 !py-2 !shadow-md hover:!shadow-lg hover:!scale-105 !transition-all !duration-200" />
           </div>
         </div>
-        
+
         {/* Mobile navigation */}
         <div className="md:hidden flex overflow-x-auto py-2 space-x-1">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-all ${activeTab === item.id 
-                ? 'bg-indigo-700/70 text-white' 
+              className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-all ${activeTab === item.id
+                ? 'bg-indigo-700/70 text-white'
                 : 'text-indigo-200 hover:bg-indigo-800/50 hover:text-white'}`}
             >
               {item.label}

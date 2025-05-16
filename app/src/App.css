@@ -1,40 +1,69 @@
 /* Modernized App styles for a beautiful, animated hero and micro-interactions */
 
 .hero-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+  background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
   position: relative;
   overflow: hidden;
 }
+
+/* Add text shadow for better readability */
+.hero-gradient h2,
+.hero-gradient p {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 .hero-animated-bg {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 0;
   pointer-events: none;
 }
+
 .hero-animated-bg span {
   position: absolute;
   border-radius: 50%;
   opacity: 0.2;
   animation: float 8s ease-in-out infinite alternate;
 }
+
 .hero-animated-bg .circle1 {
-  width: 300px; height: 300px; background: #818cf8;
-  left: 10%; top: 10%;
+  width: 300px;
+  height: 300px;
+  background: #818cf8;
+  left: 10%;
+  top: 10%;
   animation-delay: 0s;
 }
+
 .hero-animated-bg .circle2 {
-  width: 200px; height: 200px; background: #6366f1;
-  right: 15%; top: 30%;
+  width: 200px;
+  height: 200px;
+  background: #6366f1;
+  right: 15%;
+  top: 30%;
   animation-delay: 2s;
 }
+
 .hero-animated-bg .circle3 {
-  width: 150px; height: 150px; background: #c7d2fe;
-  left: 40%; bottom: 10%;
+  width: 150px;
+  height: 150px;
+  background: #c7d2fe;
+  left: 40%;
+  bottom: 10%;
   animation-delay: 4s;
 }
+
 @keyframes float {
-  0% { transform: translateY(0) scale(1); }
-  100% { transform: translateY(-30px) scale(1.05); }
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  100% {
+    transform: translateY(-30px) scale(1.05);
+  }
 }
 
 /* Header styles */
@@ -45,23 +74,26 @@
 
 /* Button micro-interactions */
 .btn-cta {
-  transition: transform 0.15s cubic-bezier(.4,2,.6,1), box-shadow 0.2s;
-  box-shadow: 0 4px 20px 0 rgba(99,102,241,0.15);
+  transition: transform 0.15s cubic-bezier(.4, 2, .6, 1), box-shadow 0.2s;
+  box-shadow: 0 4px 20px 0 rgba(99, 102, 241, 0.15);
 }
-.btn-cta:hover, .btn-cta:focus-visible {
+
+.btn-cta:hover,
+.btn-cta:focus-visible {
   transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 8px 32px 0 rgba(99,102,241,0.22);
+  box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.22);
 }
 
 /* Card hover effect */
 .card-modern {
   transition: box-shadow 0.15s;
 }
+
 .card-modern:hover {
-  box-shadow: 0 8px 32px 0 rgba(99,102,241,0.12);
+  box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.12);
 }
 
 /* Utility classes for smooth transitions */
 .transition-base {
-  transition: all 0.15s cubic-bezier(.4,2,.6,1);
+  transition: all 0.15s cubic-bezier(.4, 2, .6, 1);
 }

@@ -40,7 +40,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
         }
         return showHistoryFlag;
     });
-    
+
     console.log('Wallet connected:', connected, 'Public key:', publicKey?.toBase58());
 
     const fetchGroups = useCallback(async () => {
@@ -51,7 +51,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
             setLoading(false);
             return;
         }
-        
+
         console.log('Fetching groups for wallet:', wallet.publicKey.toBase58());
         setLoading(true);
         setError(null);
@@ -88,14 +88,14 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                     console.warn(`Skipping account ${acc.pubkey.toBase58()}:`, e);
                 }
             }
-            
+
             const mine = [];
             for (const group of validGroups) {
                 if (group.account.participants.some(p => p.equals(wallet.publicKey))) {
                     mine.push(group);
                 }
             }
-            
+
             setGroups(mine.map(account => ({
                 pubkey: account.pubkey,
                 account: {
@@ -166,7 +166,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                 </div>
                 <h3 className="text-lg font-medium text-red-700">Error loading groups</h3>
                 <p className="mt-1 text-sm text-red-600">{error}</p>
-                <button 
+                <button
                     onClick={fetchGroups}
                     className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm font-medium transition-colors"
                 >
@@ -197,11 +197,11 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">My Groups</h2>
-                    <p className="text-sm text-gray-500">Groups you're a member of</p>
+                    {/* <h2 className="text-2xl font-bold text-gray-900">My Groups</h2> */}
+                    <p className="text-sm font-bold text-gray-500">Groups you're a member of</p>
                 </div>
                 <div className="flex space-x-2">
-                    <button 
+                    <button
                         onClick={() => setShowHistory(!showHistory)}
                         className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                     >
@@ -210,7 +210,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                         </svg>
                         {showHistory ? 'Hide History' : 'View History'}
                     </button>
-                    <button 
+                    <button
                         onClick={fetchGroups}
                         className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                         disabled={loading}
@@ -222,7 +222,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                     </button>
                 </div>
             </div>
-            
+
             {showHistory && (
                 <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
                     <h3 className="text-lg font-semibold text-indigo-900 mb-2">Group History</h3>
@@ -239,8 +239,8 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                             </thead>
                             <tbody className="divide-y divide-indigo-100">
                                 {groups.map((group) => (
-                                    <tr 
-                                        key={group.pubkey.toBase58()} 
+                                    <tr
+                                        key={group.pubkey.toBase58()}
                                         className="hover:bg-indigo-100 cursor-pointer"
                                         onClick={(e) => handleGroupClick(group.pubkey, e)}
                                     >
@@ -263,7 +263,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                     </div>
                 </div>
             )}
-            
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {!showHistory && groups.map((group) => (
                     <div
@@ -284,7 +284,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                                     )}
                                 </div>
                             </div>
-                            
+
                             <div className="mt-4 flex items-center justify-between">
                                 <div className="flex -space-x-2">
                                     {group.account.participants.slice(0, 3).map((participant, idx) => (
@@ -311,7 +311,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="bg-gray-50 px-5 py-3 border-t border-gray-100">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">

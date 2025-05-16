@@ -63,14 +63,14 @@ export default function App() {
 
   return (
     <WalletConnectionProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen" style={{ backgroundColor: "#b4a9f4" }}>
         {/* Header */}
         <header className="header-blur bg-white/80 shadow-sm sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <h1 className="text-2xl font-extrabold text-indigo-700">
               Ledger &amp; Pay
             </h1>
-            <WalletMultiButton className="hover:scale-105 transition" />
+            <WalletMultiButton className="!bg-red-600 hover:!bg-red-700 !text-white !font-medium !rounded-lg !px-4 !py-2 !shadow-md hover:!shadow-lg hover:scale-105 transition" />
           </div>
         </header>
 
@@ -78,7 +78,7 @@ export default function App() {
         <section className="hero-gradient text-white py-20">
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl font-extrabold">Split bills the easy way</h2>
-            <p className="mt-4 text-xl text-indigo-100">
+            <p className="mt-4 text-xl text-white">
               Create a group. Log expenses. Settle in USDC.
             </p>
             <a
@@ -101,15 +101,13 @@ export default function App() {
             <div className="flex justify-center">
               <TabsList>
                 <TabsTrigger value="groups">My Groups</TabsTrigger>
-                <TabsTrigger value="expenses" disabled={!groupPda}>
-                  {groupPda ? "Log Expense" : "Select a Group"}
+                <TabsTrigger value="expenses" disabled={false}>
+                  {groupPda ? "Log Expense" : "Log Expense"}
                 </TabsTrigger>
-                <TabsTrigger value="settle" disabled={!groupPda}>
-                  {groupPda ? "Settle" : "Select a Group"}
+                <TabsTrigger value="settle" disabled={false}>
+                  {groupPda ? "Settle" : "Settle Up"}
                 </TabsTrigger>
-                <TabsTrigger value="manage" disabled={!groupPda}>
-                  {groupPda ? "Manage Group" : "Select a Group"}
-                </TabsTrigger>
+
               </TabsList>
             </div>
 
