@@ -111,7 +111,7 @@ export const WalletConnectionProvider: FC<{ children: ReactNode }> = ({
     const network = WalletAdapterNetwork.Devnet;
 
     // Use a custom RPC endpoint for better reliability
-    const endpoint = "https://maxy-jvs3ng-fast-devnet.helius-rpc.com";
+    const endpoint = "https://api.devnet.solana.com";
 
     // Configure wallet adapters with more options
     const wallets = useMemo(
