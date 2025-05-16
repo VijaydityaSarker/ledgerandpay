@@ -1,7 +1,7 @@
 /***********************
  * Modern CSS Reset & Base Styles
  ***********************/
-html {
+ html {
   box-sizing: border-box;
   scroll-behavior: smooth;
 }
@@ -41,4 +41,58 @@ a {
 a:hover, a:focus {
   color: #4338ca;
   text-decoration: underline;
+}
+
+/* Tailwind imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Glassmorphism utilities */
+.glass-card {
+  @apply backdrop-blur-lg rounded-xl shadow-lg border transition-all duration-300;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+}
+
+.glass-card:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Animation utilities */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Glow effects */
+.glow {
+  box-shadow: 0 0 15px rgba(101, 100, 241, 0.5);
+}
+
+.glow-green {
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.5);
+}
+
+.glow-purple {
+  box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
 }

@@ -3,28 +3,21 @@ import React, { useState } from "react";
 import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { Program, AnchorProvider, web3 } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import idl from "./ledgerandpay.json";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { toast } from "sonner";
-import idlJson from "../ledgerandpay.json";
 
 interface GroupAccount {
-  creator: PublicKey;
-  uniqueSeed: Uint8Array;
-  bump: number;
-  groupName: string;
-  description: string;
-  participants: PublicKey[];
-  createdAt: bigint;
+    creator: PublicKey;
+    uniqueSeed: Uint8Array;
+    bump: number;
+    groupName: string;
+    description: string;
+    participants: PublicKey[];
+    createdAt: bigint;
 }
 
-// Cast your imported JSON to Anchor's Idl type
-const idl = idlJson as any;
-
-interface JoinGroupProps {
-    onSuccess?: (txSignature: string) => void;
-}
-
-export const JoinGroup: React.FC<JoinGroupProps> = ({ onSuccess }) => {
+export const JoinGroup: React.FC = () => {
     const [groupPdaStr, setGroupPdaStr] = useState("");
     const [txSignature, setTxSignature] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -56,7 +49,7 @@ export const JoinGroup: React.FC<JoinGroupProps> = ({ onSuccess }) => {
             });
 
             // Cast the IDL to any to avoid TypeScript errors with the full program type
-            const program = new Program(idl, provider) as any;
+            const program = new Program(idl as any, provider) as any;
 
             // Fetch the group account to get the creator
             let groupAccount: GroupAccount;
@@ -86,12 +79,13 @@ export const JoinGroup: React.FC<JoinGroupProps> = ({ onSuccess }) => {
 
             setTxSignature(tx);
             toast.success("Successfully joined the group!");
-            
-            // Call the onSuccess callback if provided
-            if (onSuccess) {
-                onSuccess(tx);
-            }
-            
+
+            // Reset the form after a short delay
+            setTimeout(() => {
+                setGroupPdaStr("");
+                setTxSignature(null);
+            }, 3000);
+
         } catch (err) {
             console.error("❌ joinGroup RPC error:", err);
             const errorMessage = err instanceof Error ? err.message : "Failed to join group";
@@ -114,16 +108,15 @@ export const JoinGroup: React.FC<JoinGroupProps> = ({ onSuccess }) => {
     };
 
     return (
-        <div>
-            {!publicKey && (
-                <div className="text-center mb-6">
-                    <p className="text-indigo-300 mb-4">Connect your wallet to join a group</p>
-                    <WalletMultiButton className="mx-auto" />
-                </div>
-            )}
-            
+        <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">Join a Group</h2>
+
             <div className="mb-6">
-                <label htmlFor="group-pda" className="block text-sm font-medium text-white mb-2">
+                <WalletMultiButton className="w-full justify-center" />
+            </div>
+
+            <div className="mb-6">
+                <label htmlFor="group-pda" className="block text-sm font-medium text-gray-700 mb-2">
                     Group Address
                 </label>
                 <div className="flex space-x-2">
@@ -136,7 +129,7 @@ export const JoinGroup: React.FC<JoinGroupProps> = ({ onSuccess }) => {
                             setGroupPdaStr(e.target.value);
                             setError(null);
                         }}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         disabled={loading}
                     />
                     <button
@@ -156,11 +149,10 @@ export const JoinGroup: React.FC<JoinGroupProps> = ({ onSuccess }) => {
             <button
                 onClick={handleJoin}
                 disabled={loading || !groupPdaStr || !publicKey}
-                className={`w-full py-3 px-4 rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                    loading || !groupPdaStr || !publicKey
-                        ? 'bg-blue-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                className={`w-full py-3 px-4 rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading || !groupPdaStr || !publicKey
+                    ? 'bg-blue-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
             >
                 {loading ? 'Joining...' : 'Join Group'}
             </button>

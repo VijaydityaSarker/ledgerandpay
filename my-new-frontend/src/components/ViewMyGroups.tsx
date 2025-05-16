@@ -4,7 +4,8 @@ import { PublicKey } from "@solana/web3.js";
 import { useConnection, useAnchorWallet, useWallet, useAnchorWallet as useAnchorWalletHook } from "@solana/wallet-adapter-react";
 import { AnchorProvider, Program, BN } from "@coral-xyz/anchor";
 import type { Idl } from "@coral-xyz/anchor";
-import idlJson from "../ledgerandpay.json";
+import type { Ledgerandpay } from "./ledgerandpay";
+import idlJson from "./ledgerandpay.json";
 
 type GroupAccount = {
     pubkey: PublicKey,
@@ -31,16 +32,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
     const [groups, setGroups] = useState<GroupAccount[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [showHistory, setShowHistory] = useState(() => {
-        // Check if the showGroupHistory flag is set in sessionStorage
-        const showHistoryFlag = sessionStorage.getItem('showGroupHistory') === 'true';
-        // Clear the flag after reading it
-        if (showHistoryFlag) {
-            sessionStorage.removeItem('showGroupHistory');
-        }
-        return showHistoryFlag;
-    });
-    
+
     console.log('Wallet connected:', connected, 'Public key:', publicKey?.toBase58());
 
     const fetchGroups = useCallback(async () => {
@@ -51,7 +43,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
             setLoading(false);
             return;
         }
-        
+
         console.log('Fetching groups for wallet:', wallet.publicKey.toBase58());
         setLoading(true);
         setError(null);
@@ -60,8 +52,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
             const provider = new AnchorProvider(connection, wallet, {
                 preflightCommitment: "processed",
             });
-            // Cast the IDL to any to avoid TypeScript errors with the full program type
-            const program = new Program(idlJson as Idl, provider) as any;
+            const program = new Program<Ledgerandpay>(idlJson as Idl, provider);
             console.log('Program ID:', program.programId.toBase58());
 
             // Fetch all groups
@@ -88,14 +79,14 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                     console.warn(`Skipping account ${acc.pubkey.toBase58()}:`, e);
                 }
             }
-            
+
             const mine = [];
             for (const group of validGroups) {
                 if (group.account.participants.some(p => p.equals(wallet.publicKey))) {
                     mine.push(group);
                 }
             }
-            
+
             setGroups(mine.map(account => ({
                 pubkey: account.pubkey,
                 account: {
@@ -166,7 +157,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                 </div>
                 <h3 className="text-lg font-medium text-red-700">Error loading groups</h3>
                 <p className="mt-1 text-sm text-red-600">{error}</p>
-                <button 
+                <button
                     onClick={fetchGroups}
                     className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm font-medium transition-colors"
                 >
@@ -200,72 +191,20 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                     <h2 className="text-2xl font-bold text-gray-900">My Groups</h2>
                     <p className="text-sm text-gray-500">Groups you're a member of</p>
                 </div>
-                <div className="flex space-x-2">
-                    <button 
-                        onClick={() => setShowHistory(!showHistory)}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                    >
-                        <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {showHistory ? 'Hide History' : 'View History'}
-                    </button>
-                    <button 
-                        onClick={fetchGroups}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                        disabled={loading}
-                    >
-                        <svg className={`-ml-0.5 mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        {loading ? 'Refreshing...' : 'Refresh'}
-                    </button>
-                </div>
+                <button
+                    onClick={fetchGroups}
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    disabled={loading}
+                >
+                    <svg className={`-ml-0.5 mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {loading ? 'Refreshing...' : 'Refresh'}
+                </button>
             </div>
-            
-            {showHistory && (
-                <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
-                    <h3 className="text-lg font-semibold text-indigo-900 mb-2">Group History</h3>
-                    <p className="text-sm text-indigo-700 mb-4">Here are all the groups you've been a part of.</p>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-indigo-200">
-                            <thead>
-                                <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-indigo-500 uppercase tracking-wider">Group Name</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-indigo-500 uppercase tracking-wider">Members</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-indigo-500 uppercase tracking-wider">Created</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-indigo-500 uppercase tracking-wider">Group ID</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-indigo-100">
-                                {groups.map((group) => (
-                                    <tr 
-                                        key={group.pubkey.toBase58()} 
-                                        className="hover:bg-indigo-100 cursor-pointer"
-                                        onClick={(e) => handleGroupClick(group.pubkey, e)}
-                                    >
-                                        <td className="px-4 py-3 text-sm font-medium text-indigo-900">{group.account.group_name}</td>
-                                        <td className="px-4 py-3 text-sm text-indigo-700">{group.account.participants.length}</td>
-                                        <td className="px-4 py-3 text-sm text-indigo-700">
-                                            {new Date(Number(group.account.created_at) * 1000).toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'short',
-                                                day: 'numeric'
-                                            })}
-                                        </td>
-                                        <td className="px-4 py-3 text-xs font-mono text-indigo-600">
-                                            {group.pubkey.toBase58().slice(0, 6)}...{group.pubkey.toBase58().slice(-4)}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
-            
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {!showHistory && groups.map((group) => (
+                {groups.map((group) => (
                     <div
                         key={group.pubkey.toBase58()}
                         className="group relative bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
@@ -284,7 +223,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                                     )}
                                 </div>
                             </div>
-                            
+
                             <div className="mt-4 flex items-center justify-between">
                                 <div className="flex -space-x-2">
                                     {group.account.participants.slice(0, 3).map((participant, idx) => (
@@ -311,7 +250,7 @@ export const ViewMyGroups: React.FC<ViewMyGroupsProps> = ({ onNewGroupTx, onGrou
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="bg-gray-50 px-5 py-3 border-t border-gray-100">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">

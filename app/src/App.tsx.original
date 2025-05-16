@@ -1,0 +1,547 @@
+import { useState, useEffect } from 'react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { toast } from 'sonner';
+import Header from './components/Header';
+import ExpenseTracker from './components/ExpenseTracker';
+import SettleExpense from './components/SettleExpense';
+import ViewMyGroups from './components/ViewMyGroups';
+import CreateGroup from './components/CreateGroup';
+import JoinGroup from './components/JoinGroup';
+import { useWalletStatus } from './contexts/WalletConnectionProvider';
+import gridPattern from './grid-pattern.svg';
+import programService from './services/programService';
+import './index.css';
+
+// Mock data for the dashboard
+const mockGroups = [
+  { id: '1', name: 'Roommates', members: 3, balance: 125.50, currency: 'USDC' },
+  { id: '2', name: 'Trip to Paris', members: 5, balance: 240.75, currency: 'USDC' },
+  { id: '3', name: 'Office Lunch', members: 4, balance: 0, currency: 'USDC' },
+];
+
+const mockTransactions = [
+  { id: '1', description: 'Grocery shopping', amount: 45.20, payer: 'You', date: '2 hours ago', group: 'Roommates', settled: false, currency: 'USDC' },
+  { id: '2', description: 'Dinner at Le Bistro', amount: 120.00, payer: 'Alice', date: 'Yesterday', group: 'Trip to Paris', settled: true, currency: 'USDC' },
+  { id: '3', description: 'Taxi ride', amount: 22.50, payer: 'Bob', date: '3 days ago', group: 'Trip to Paris', settled: false, currency: 'USDC' },
+  { id: '4', description: 'Movie tickets', amount: 36.00, payer: 'You', date: 'Last week', group: 'Roommates', settled: true, currency: 'USDC' },
+];
+
+const achievements = [
+  { id: '1', name: 'First Expense', description: 'Log your first expense', completed: true, icon: '📝' },
+  { id: '2', name: 'Group Creator', description: 'Create your first group', completed: true, icon: '👥' },
+  { id: '3', name: 'Settlement Pro', description: 'Settle 5 expenses', completed: false, progress: 2, total: 5, icon: '💰' },
+  { id: '4', name: 'Big Spender', description: 'Log expenses totaling 1000 USDC', completed: false, progress: 423.7, total: 1000, icon: '💸' },
+];
+
+export default function App() {
+  const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
+  const { connectionStatus, solBalance } = useWalletStatus();
+  const wallet = useWallet();
+  
+  // User stats and UI state
+  const [userLevel, setUserLevel] = useState(1);
+  const [xp, setXp] = useState(125);
+  const [nextLevelXp, setNextLevelXp] = useState(300);
+  const [activeView, setActiveView] = useState<'dashboard' | 'expenses' | 'settle' | 'groups' | 'create-group' | 'join-group'>('dashboard');
+  const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(null);
+  
+  // Backend data state
+  const [myGroups, setMyGroups] = useState<any[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<PublicKey | null>(null);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastTxSignature, setLastTxSignature] = useState<string | null>(null);
+  
+  // Initialize program service when wallet is connected
+  useEffect(() => {
+    if (connected && publicKey && connection) {
+      try {
+        console.log('Initializing program service...');
+        const program = programService.initializeProgram(wallet, connection);
+        console.log('Program service initialized successfully:', program.programId.toString());
+        toast.success('Connected to Solana program');
+      } catch (err) {
+        console.error('Failed to initialize program service:', err);
+        setError('Failed to initialize program service');
+        toast.error('Failed to connect to Solana program');
+      }
+    }
+  }, [connected, publicKey, connection, wallet]);
+  
+  // Fetch groups when wallet is connected or after a new transaction
+  useEffect(() => {
+    const fetchGroups = async () => {
+      if (!connected || !publicKey) return;
+      
+      setIsLoading(true);
+      try {
+        const groups = await programService.fetchGroups(publicKey);
+        setMyGroups(groups);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching groups:', err);
+        setError('Failed to fetch groups');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchGroups();
+  }, [connected, publicKey, lastTxSignature]);
+  
+  // Fetch expenses when a group is selected
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      if (!selectedGroup) return;
+      
+      setIsLoading(true);
+      try {
+        const expenseAccounts = await programService.fetchExpenses(selectedGroup);
+        setExpenses(expenseAccounts);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching expenses:', err);
+        setError('Failed to fetch expenses');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchExpenses();
+  }, [selectedGroup, lastTxSignature]);
+  
+  // Handle group selection
+  const handleGroupSelect = (groupPda: PublicKey) => {
+    setSelectedGroup(groupPda);
+    setActiveView('expenses');
+  };
+  
+  // Handle successful transaction
+  const handleTransactionSuccess = (txSignature: string) => {
+    setLastTxSignature(txSignature);
+    // Award XP for successful transactions
+    setXp(prev => {
+      const newXp = prev + 25;
+      if (newXp >= nextLevelXp) {
+        setUserLevel(prevLevel => prevLevel + 1);
+        setNextLevelXp(prevNextLevel => prevNextLevel + 200);
+        return newXp - nextLevelXp;
+      }
+      return newXp;
+    });
+  };
+  
+  // Handle group creation success
+  const handleGroupCreationSuccess = (txSignature: string, groupPda: string) => {
+    setLastTxSignature(txSignature);
+    // Award XP for creating a group
+    setXp(prev => {
+      const newXp = prev + 50;
+      if (newXp >= nextLevelXp) {
+        setUserLevel(prevLevel => prevLevel + 1);
+        setNextLevelXp(prevNextLevel => prevNextLevel + 200);
+        return newXp - nextLevelXp;
+      }
+      return newXp;
+    });
+    // Don't automatically switch to groups view
+    // The CreateGroup component will handle showing the success state
+  };
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white">
+      <Header />
+      
+      {/* Navigation Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="flex border-b border-indigo-800 mb-6 overflow-x-auto hide-scrollbar">
+          <button 
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeView === 'dashboard' ? 'border-b-2 border-indigo-500 text-white' : 'text-indigo-300 hover:text-white'}`}
+            onClick={() => setActiveView('dashboard')}
+          >
+            Dashboard
+          </button>
+          <button 
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeView === 'expenses' ? 'border-b-2 border-indigo-500 text-white' : 'text-indigo-300 hover:text-white'}`}
+            onClick={() => setActiveView('expenses')}
+          >
+            Expenses & Settlements
+          </button>
+          <button 
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeView === 'groups' ? 'border-b-2 border-indigo-500 text-white' : 'text-indigo-300 hover:text-white'}`}
+            onClick={() => setActiveView('groups')}
+          >
+            My Groups
+          </button>
+          <button 
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeView === 'settle' ? 'border-b-2 border-indigo-500 text-white' : 'text-indigo-300 hover:text-white'}`}
+            onClick={() => setActiveView('settle')}
+          >
+            Settle Up
+          </button>
+        </div>
+      </div>
+      
+      {/* Hero section with user stats */}
+      <section className="relative overflow-hidden py-10 sm:py-14">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/20 to-transparent"></div>
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" style={{ backgroundImage: `url(${gridPattern})` }}>
+            <div className="absolute inset-0 bg-indigo-900 bg-gradient-to-r from-indigo-900/30 to-purple-900/30 animate-pulse [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" style={{ animationDuration: '10s' }}></div>
+          </div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="glass-card p-6 sm:p-8 max-w-3xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-3xl font-bold shadow-lg">
+                  {userLevel}
+                </div>
+                <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-yellow-900 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-yellow-600">+</div>
+              </div>
+              
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome back, Explorer!</h1>
+                <p className="text-indigo-200 mb-4">You're making great progress on your expense tracking journey.</p>
+                
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Level {userLevel}</span>
+                    <span>{xp}/{nextLevelXp} XP</span>
+                  </div>
+                  <div className="h-2 bg-indigo-900/50 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full transition-all duration-1000" 
+                      style={{ width: `${(xp/nextLevelXp) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                  <span className="bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Level {userLevel}
+                  </span>
+                  <span className="bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    2/5 Settlements
+                  </span>
+                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    2 Badges
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 pt-6">
+        {/* Dashboard View */}
+        {activeView === 'dashboard' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left column */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Quick actions */}
+              <div className="glass-card p-6">
+                <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <button 
+                    className="bg-indigo-700/50 hover:bg-indigo-700/70 transition-colors p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2"
+                    onClick={() => setActiveView('expenses')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span className="text-sm font-medium">New Expense</span>
+                  </button>
+                  <button 
+                    className="bg-indigo-700/50 hover:bg-indigo-700/70 transition-colors p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2"
+                    onClick={() => setActiveView('create-group')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span className="text-sm font-medium">New Group</span>
+                  </button>
+                  <button 
+                    className="bg-indigo-700/50 hover:bg-indigo-700/70 transition-colors p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2"
+                    onClick={() => setActiveView('settle')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-sm font-medium">Settle Up</span>
+                  </button>
+                  <button className="bg-indigo-700/50 hover:bg-indigo-700/70 transition-colors p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span className="text-sm font-medium">View History</span>
+                  </button>
+                  <button 
+                    className="bg-indigo-700/50 hover:bg-indigo-700/70 transition-colors p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2"
+                    onClick={() => setActiveView('join-group')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    <span className="text-sm font-medium">Join Group</span>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Wallet Status Card - New! */}
+              {connected && publicKey && (
+                <div className="glass-card p-6">
+                  <h2 className="text-xl font-bold mb-4">Wallet Status</h2>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-3 h-3 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                        <p className="font-medium">{connectionStatus === 'connected' ? 'Connected' : 'Connecting...'}</p>
+                      </div>
+                      <p className="text-sm text-indigo-300">
+                        {publicKey.toString().slice(0, 6)}...{publicKey.toString().slice(-4)}
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-col items-end">
+                      <p className="font-bold text-lg">{solBalance !== null ? `${solBalance.toFixed(4)} SOL` : 'Loading...'}</p>
+                      {solBalance !== null && solBalance < 0.1 && (
+                        <p className="text-xs text-yellow-300 mt-1">Low balance warning</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Recent activity */}
+              <div className="glass-card p-6">
+                <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
+                <div className="space-y-4">
+                  {mockTransactions.map(transaction => (
+                    <div key={transaction.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-indigo-800/20 transition-colors">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${transaction.settled ? 'bg-green-500/20 text-green-300' : 'bg-blue-500/20 text-blue-300'}`}>
+                        {transaction.settled ? '✓' : '$'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between">
+                          <p className="font-medium truncate">{transaction.description}</p>
+                          <p className={`font-semibold ${transaction.payer === 'You' ? 'text-red-400' : 'text-green-400'}`}>
+                            {transaction.payer === 'You' ? '-' : '+'}{transaction.amount} {transaction.currency || 'USDC'}
+                          </p>
+                        </div>
+                        <div className="flex justify-between">
+                          <p className="text-sm text-indigo-300">{transaction.group} • {transaction.date}</p>
+                          <p className="text-sm text-indigo-300">{transaction.payer}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  className="w-full mt-4 py-2 bg-indigo-700/50 hover:bg-indigo-700/70 rounded-lg text-sm font-medium transition-colors"
+                  onClick={() => setActiveView('expenses')}
+                >
+                  View All Transactions
+                </button>
+              </div>
+            </div>
+            
+            {/* Right column */}
+            <div className="space-y-6">
+              {/* My Groups */}
+              <div className="glass-card p-6">
+                <h2 className="text-xl font-bold mb-4">My Groups</h2>
+                <div className="space-y-3">
+                  {mockGroups.map(group => (
+                    <div key={group.id} className="p-3 rounded-lg bg-indigo-800/20 hover:bg-indigo-800/30 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-medium">{group.name}</h3>
+                        <span className="text-xs bg-indigo-700/50 px-2 py-0.5 rounded-full">{group.members} members</span>
+                      </div>
+                      <div className="mt-2 flex justify-between items-center">
+                        <p className="text-sm text-indigo-300">Your balance</p>
+                        <p className={`font-semibold ${group.balance > 0 ? 'text-green-400' : group.balance < 0 ? 'text-red-400' : 'text-indigo-300'}`}>
+                          {group.balance > 0 ? '+' : ''}{group.balance} {group.currency}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  className="w-full mt-4 py-2 bg-indigo-700/50 hover:bg-indigo-700/70 rounded-lg text-sm font-medium transition-colors"
+                  onClick={() => setActiveView('groups')}
+                >
+                  View All Groups
+                </button>
+              </div>
+              
+              {/* Achievements */}
+              <div className="glass-card p-6">
+                <h2 className="text-xl font-bold mb-4">Achievements</h2>
+                <div className="space-y-4">
+                  {achievements.map(achievement => (
+                    <div key={achievement.id} className={`p-3 rounded-lg ${achievement.completed ? 'bg-green-800/20' : 'bg-indigo-800/20'}`}>
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 rounded-full bg-indigo-700/50 flex items-center justify-center text-lg">
+                          {achievement.icon}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <h3 className="font-medium">{achievement.name}</h3>
+                            {achievement.completed && (
+                              <span className="text-xs bg-green-700/50 text-green-300 px-2 py-0.5 rounded-full">Completed</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-indigo-300">{achievement.description}</p>
+                          
+                          {!achievement.completed && achievement.progress !== undefined && (
+                            <div className="mt-2">
+                              <div className="flex justify-between text-xs mb-1">
+                                <span>Progress</span>
+                                <span>{achievement.progress}/{achievement.total}</span>
+                              </div>
+                              <div className="h-1.5 bg-indigo-900/50 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full" 
+                                  style={{ width: `${(achievement.progress/achievement.total) * 100}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Expenses & Settlements View */}
+        {activeView === 'expenses' && (
+          <div className="glass-card p-6">
+            <ExpenseTracker 
+              selectedGroup={selectedGroup}
+              onTransactionSuccess={handleTransactionSuccess}
+            />
+          </div>
+        )}
+        
+        {/* Groups View */}
+        {activeView === 'groups' && (
+          <div className="glass-card p-6">
+            <ViewMyGroups
+              onNewGroupTx={lastTxSignature}
+              onGroupSelect={(groupPubkey) => {
+                console.log('Selected group:', groupPubkey.toString());
+                handleGroupSelect(groupPubkey);
+              }}
+            />
+            
+            <div className="flex gap-3 mt-6">
+              <button 
+                className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white py-3 rounded-lg font-medium transition-all"
+                onClick={() => setActiveView('create-group')}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Create New Group
+                    </span>
+                  </button>
+                  <button 
+                    className="flex-1 bg-indigo-700/50 hover:bg-indigo-700/70 py-3 rounded-lg font-medium transition-colors"
+                    onClick={() => setActiveView('join-group')}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      Join Existing Group
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Create Group View */}
+        {activeView === 'create-group' && (
+          <div className="glass-card p-6">
+            <div className="flex justify-end">
+              <button 
+                className="text-indigo-300 hover:text-white"
+                onClick={() => setActiveView('groups')}
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <CreateGroup 
+              onSuccess={handleGroupCreationSuccess}
+            />
+          </div>
+        )}
+        
+        {/* Join Group View */}
+        {activeView === 'join-group' && (
+          <div className="glass-card p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Join an Existing Group</h2>
+              <button 
+                className="text-indigo-300 hover:text-white"
+                onClick={() => setActiveView('groups')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <JoinGroup 
+              onSuccess={handleTransactionSuccess}
+            />
+          </div>
+        )}
+        
+        {/* Settle Up View */}
+        {activeView === 'settle' && (
+          <div className="glass-card p-6">
+            <h2 className="text-xl font-bold mb-6">Settle Expenses</h2>
+            
+            <SettleExpense 
+              onSuccess={(txId) => {
+                // In a real app, we would update the expense status
+                console.log('Settlement successful with txId:', txId);
+                // Refresh user data
+                setXp(xp + 25); // Award XP for settlement
+              }}
+              onCancel={() => setActiveView('dashboard')}
+            />
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}

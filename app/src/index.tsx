@@ -13,6 +13,7 @@ import {
 } from "@solana/wallet-adapter-wallets";
 import { TipLinkWalletAdapter } from "@tiplink/wallet-adapter";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import "@solana/wallet-adapter-react-ui/styles.css";
 import App from "./App";
 import "./index.css";
 import { Buffer } from "buffer";

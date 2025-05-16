@@ -1,10 +1,14 @@
 // app/src/components/CreateGroup.tsx
 import React, { useState, useEffect } from "react";
 import { PublicKey } from "@solana/web3.js";
-import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
+import {
+    useConnection,
+    useAnchorWallet,
+    useWallet,
+} from "@solana/wallet-adapter-react";
 import { AnchorProvider, Program, web3 } from "@coral-xyz/anchor";
 import type { Idl } from "@coral-xyz/anchor";
-import idlJson from "../ledgerandpay.json";
+import idlJson from "./ledgerandpay.json";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { toast } from "sonner";
 
@@ -30,18 +34,18 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
     const [error, setError] = useState<string | null>(null);
     const [createdGroupPda, setCreatedGroupPda] = useState<string | null>(null);
     const [formValid, setFormValid] = useState(false);
-    
+
     // Validate form whenever form data changes
     useEffect(() => {
         setFormValid(
-            formData.groupName.trim().length > 0 && 
+            formData.groupName.trim().length > 0 &&
             formData.groupName.length <= 32 &&
             (!formData.groupDesc || formData.groupDesc.length <= 200)
         );
     }, [formData]);
 
-    const { connection } = useConnection();
     const wallet = useAnchorWallet();
+    const { connection } = useConnection();
     const { publicKey } = useWallet();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -54,7 +58,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
 
     const handleCreateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!wallet || !publicKey) {
             setError("Please connect your wallet first");
             toast.error("Wallet not connected");
@@ -68,7 +72,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
 
         setLoading(true);
         setError(null);
-        
+
         // Clear any previous results
         setTxSignature(null);
         setCreatedGroupPda(null);
@@ -113,15 +117,23 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
 
             setTxSignature(tx);
             setCreatedGroupPda(groupPda.toBase58());
-            
+
             // Notify parent component of success
             onSuccess(tx, groupPda.toBase58());
-            
+
             // Show success message
             toast.success("Group created successfully!");
-            
-            // Success state will remain visible until user clicks "Create Another Group"
-            
+
+            // Reset form after a short delay
+            setTimeout(() => {
+                setFormData({
+                    groupName: '',
+                    groupDesc: ''
+                });
+                setTxSignature(null);
+                setCreatedGroupPda(null);
+            }, 5000);
+
         } catch (err) {
             console.error("❌ createGroup RPC error:", err);
             const errorMessage = err instanceof Error ? err.message : "Failed to create group";
@@ -141,12 +153,12 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
     };
 
     return (
-        <div>
+        <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white">Create a New Group</h2>
-                <p className="mt-1 text-sm text-indigo-300">Start a new group and invite others to join</p>
+                <h2 className="text-2xl font-bold text-gray-900">Create a New Group</h2>
+                <p className="mt-1 text-sm text-gray-500">Start a new group and invite others to join</p>
             </div>
-            
+
             {!publicKey ? (
                 <div className="text-center py-6">
                     <div className="mb-4 text-gray-400">
@@ -166,11 +178,11 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Group Created Successfully!</h3>
                     <p className="mt-2 text-gray-600">Your group has been created on the Solana blockchain.</p>
-                    
+
                     <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 text-left">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-500">Group PDA:</span>
-                            <button 
+                            <button
                                 onClick={handleCopyPDA}
                                 className="text-gray-400 hover:text-gray-500"
                                 title="Copy to clipboard"
@@ -184,7 +196,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
                             {createdGroupPda}
                         </div>
                     </div>
-                    
+
                     <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
                         <a
                             href={`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`}
@@ -211,8 +223,8 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
             ) : (
                 <form onSubmit={handleCreateGroup} className="space-y-6">
                     <div>
-                        <label htmlFor="groupName" className="block text-sm font-medium text-white mb-1">
-                            Group Name <span className="text-red-400">*</span>
+                        <label htmlFor="groupName" className="block text-sm font-medium text-gray-700 mb-1">
+                            Group Name <span className="text-red-500">*</span>
                         </label>
                         <div className="mt-1 relative rounded-md shadow-sm">
                             <input
@@ -222,7 +234,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
                                 value={formData.groupName}
                                 onChange={handleInputChange}
                                 maxLength={32}
-                                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 bg-white"
+                                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 placeholder="e.g., Solana Devs"
                                 disabled={loading}
                                 required
@@ -233,10 +245,10 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
                         </div>
                         <p className="mt-1 text-xs text-gray-500">Maximum 32 characters</p>
                     </div>
-                    
+
                     <div>
-                        <label htmlFor="groupDesc" className="block text-sm font-medium text-white mb-1">
-                            Description <span className="text-indigo-300">(Optional)</span>
+                        <label htmlFor="groupDesc" className="block text-sm font-medium text-gray-700 mb-1">
+                            Description <span className="text-gray-400">(Optional)</span>
                         </label>
                         <div className="mt-1 relative">
                             <textarea
@@ -246,7 +258,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
                                 onChange={handleInputChange}
                                 maxLength={200}
                                 rows={3}
-                                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 bg-white"
+                                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 placeholder="Tell us about this group..."
                                 disabled={loading}
                             />
@@ -255,7 +267,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
                             </div>
                         </div>
                     </div>
-                    
+
                     {error && (
                         <div className="rounded-md bg-red-50 p-4">
                             <div className="flex">
@@ -273,16 +285,15 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onSuccess }) => {
                             </div>
                         </div>
                     )}
-                    
+
                     <div className="pt-2">
                         <button
                             type="submit"
                             disabled={loading || !formValid}
-                            className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white ${
-                                loading || !formValid
-                                    ? 'bg-indigo-300 cursor-not-allowed'
-                                    : 'bg-indigo-600 hover:bg-indigo-700'
-                            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors`}
+                            className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white ${loading || !formValid
+                                ? 'bg-indigo-300 cursor-not-allowed'
+                                : 'bg-indigo-600 hover:bg-indigo-700'
+                                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors`}
                         >
                             {loading ? (
                                 <>
