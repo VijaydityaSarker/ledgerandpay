@@ -4,9 +4,7 @@
 
 A Solana + Anchor on-chain program (and React front-end) for managing shared expense groups, logging expenses, and settling them in USDC via SPL tokens.
 
-<p align="center">
-  <img width="400" alt="Group view" src="app/public/screenshot.png">
-</p>
+Program id = "4UUkEZrwe8PoseD6Ph7WuUHJJ1ob5P4WevNcpFZt2LTC" Deployed in devnet
 
 ## 📦 Repository Structure
 
